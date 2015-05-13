@@ -5,7 +5,7 @@ loop_total = 100000
 start_time = Time.now
 sequence_hash = {}
 #File load
-raw_file = File.open("small.txt", "r")
+raw_file = File.open("trial.txt", "r")
 file_string = raw_file.read.to_s
 
 #word to size hash
@@ -16,14 +16,24 @@ word_size_hash.each do |word, size|
 	letter_shift_counter = 0
 
 	for i in 0..adjusted_size
-    sequence_hash[(word[letter_shift_counter..(letter_shift_counter+3)])] = word
-		if
+		four_letter_key = word[letter_shift_counter..(letter_shift_counter+3)]
+		if(sequence_hash[four_letter_key] == nil)
+    	sequence_hash[four_letter_key] = word
+		else
+			sequence_hash[four_letter_key] = 0
+		end
+
 		letter_shift_counter+=1
 	end
 	# puts "The word #{word} is #{size} characters long."
 
 end
-puts sequence_hash
+puts " Sequence\tWord"
+sequence_hash.each do |sequence, word|
+	if(word != 0)
+		puts "   #{sequence}        #{word}"
+	end
+end
 
 stop_time = Time.now
 # puts word_size_hash
