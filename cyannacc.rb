@@ -1,4 +1,6 @@
 
+require 'open-uri'
+response = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt').read
 
 loop_init = 0
 loop_total = 100000
@@ -9,7 +11,8 @@ raw_file = File.open("trial.txt", "r")
 file_string = raw_file.read.to_s
 
 #word to size hash
-word_size_hash = file_string.split("\n").inject(Hash.new(0)){|word, size| if(size.length >= 4); word[size] = size.length; end; word}
+# word_size_hash = file_string.split("\n").inject(Hash.new(0)){|word, size| if(size.length >= 4); word[size] = size.length; end; word}
+word_size_hash = response.split("\n").inject(Hash.new(0)){|word, size| if(size.length >= 4); word[size] = size.length; end; word}
 
 word_size_hash.each do |word, size|
 	adjusted_size = size - 4 # change later
@@ -22,15 +25,18 @@ word_size_hash.each do |word, size|
 		else
 			sequence_hash[four_letter_key] = 0
 		end
-
 		letter_shift_counter+=1
 	end
 	# puts "The word #{word} is #{size} characters long."
 
 end
 puts " Sequence\tWord"
+File.open("sequence_list.txt", 'w') { |file| file.write("Sequence") }
+File.open("word_list.txt", 'w') { |file| file.write("Word") }
 sequence_hash.each do |sequence, word|
 	if(word != 0)
+		File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
+		File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
 		puts "   #{sequence}        #{word}"
 	end
 end
