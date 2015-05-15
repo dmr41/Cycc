@@ -18,13 +18,17 @@ class WordAPI
 			end
 		rescue
 			@error_counter += 1
-			if(@error_counter < 4)
-				puts @error_counter
-		  	puts "That file does not exist. Please check your path"
+			if(@error_counter < 3)
+				remaining_attempts = 3 - @error_counter
+				puts "-"*40
+		  	puts "The file #{user_file_path} does not exist."
 				puts "Please enter the correct path."
+				puts "You have #{remaining_attempts} attempts left."
 				new_user_file_path = gets.chomp
 				response = user_file_response(new_user_file_path)
 			else
+				puts "-"*40
+				puts "Your last attempted was incorrect."
 				puts "Redirecting you to our test word list after 3 attempts."
 				response = api_response
 			end
@@ -34,7 +38,6 @@ class WordAPI
 			# raw_file = File.open(user_file_path, "r")
 			# raw_file.read.to_s
 	end
-
 end
 
 puts "This program identifies all unique 4 letter sequences from a list of words"
@@ -57,8 +60,6 @@ start_time = Time.now
 sequence_hash = {}
 
 
-#word to size hash
-# word_size_hash = file_string.split("\n").inject(Hash.new(0)){|word, size| if(size.length >= 4); word[size] = size.length; end; word}
 word_size_hash = response.split("\n").inject(Hash.new(0)){|word, size| if(size.length >= 4); word[size] = size.length; end; word}
 
 word_size_hash.each do |word, size|
@@ -83,7 +84,7 @@ sequence_hash.each do |sequence, word|
 	if(word != 0)
 		File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
 		File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
-		# puts "   #{sequence}        #{word}"
+		puts "   #{sequence}        #{word}"
 	end
 end
 
