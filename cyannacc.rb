@@ -24,6 +24,7 @@ class WordAPI
 
 	def api_response
 		begin
+			# fetch_external_words = open('https://www.google.fr/search?q=sadf&oq=sadf&aqs=chrome..69i57j69i60j0l4.738j0j1&sourceid=chrome&es_sm=119&ie=UTF-8')
 			fetch_external_words = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt')
 			if fetch_external_words
 				response = fetch_external_words.read
@@ -87,20 +88,29 @@ class WordAPI
 	end
 
 	def write_sequence_output(sequence_hash)
-		puts " Sequence\tWord"
+
+		puts "\n Sequence\tWord"
+		print_counter = 0
 		sequence_hash.each do |sequence, word|
-			if(word != 0)
+			if (word != 0)
 				File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
 				File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
 				puts "   #{sequence}        #{word}"
+				print_counter += 1
 			end
 		end
-	end
+		if (print_counter >= 10)
+			puts "\nThe first 10 sequence and word combos are displayed as an example"
+		else
+			puts "\nAll the sequence and word combos are displayed."
+		end
+		puts "The complete sequence_list.txt and word_list.txt have been created!\n"
 
+	end
 end
 
 loop_init = 0
-loop_total = 1000000
+loop_total = 100000
 start_time = Time.now
 
 data_source = WordAPI.new
@@ -112,5 +122,6 @@ stop_time = Time.now
 
 run_time = (stop_time - start_time)
 average_time = run_time/loop_total
-puts "File-open total time of #{loop_total} runs: #{run_time} seconds"
-puts "File-open average time: #{average_time*1000} milliseconds"
+
+puts "Total time for #{loop_total} runs: #{run_time} seconds"
+puts "Average time per run: #{average_time*1000} milliseconds"
