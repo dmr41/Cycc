@@ -2,6 +2,3 @@ hi
 ho
 hobbit
 hanky
-hanster
-hamsters
-zucchini

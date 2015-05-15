@@ -1,21 +1,22 @@
-
 class WordAPI
 	require 'open-uri'
 
 	def initialize
 		@error_counter = 0
-		File.open("sequence_list.txt", 'w') { |file| file.write("Sequence\n") }
-		File.open("word_list.txt", 'w') { |file| file.write("Word\n") }
+		@total_word_count = 0
+		File.open("sequence_list.txt", 'w') { |file| file.write("") }
+		File.open("word_list.txt", 'w') { |file| file.write("") }
+		@sequence_hash = {}
 	end
 
 	def user_options
 		puts "This program identifies all unique 4 letter sequences from a list of words"
-		puts "Would you like to use the 25K+ word default dictionary?(y/n): "
+		print  "Would you like to use the 25K+ word default dictionary?(y/n): "
 		user_data_source_choice = gets.chomp
 		if(user_data_source_choice[0] == "y" || user_data_source_choice[0] == "Y")
 			response = api_response
 		else
-			puts "Please input the path to the file to be parsed: "
+			print "Please input the path to the file to be parsed: "
 			file_name = gets.chomp
 			response = user_file_response(file_name)
 		end
@@ -24,7 +25,6 @@ class WordAPI
 
 	def api_response
 		begin
-			# fetch_external_words = open('https://www.google.fr/search?q=sadf&oq=sadf&aqs=chrome..69i57j69i60j0l4.738j0j1&sourceid=chrome&es_sm=119&ie=UTF-8')
 			fetch_external_words = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt')
 			if fetch_external_words
 				response = fetch_external_words.read
@@ -67,61 +67,80 @@ class WordAPI
 	end
 
 	def word_size_hash(user_options)
-		sequence_hash = {}
-		new_word_size_hash = user_options.split("\n").inject(Hash.new(0)) {|word, size| if(size.length >= 4); word[size] = size.length; end; word}
-
+		new_word_size_hash = user_options.split("\n").
+		                     inject(Hash.new(0)) {|word, size| @total_word_count += 1;
+													if(size.length >= 4);
+														word[size] = size.length;
+													end;
+													word}
 		new_word_size_hash.each do |word, size|
 			adjusted_size = size - 4
 			letter_shift_counter = 0
-
 			for i in 0..adjusted_size
 				four_letter_key = word[letter_shift_counter..(letter_shift_counter+3)]
-				if(sequence_hash[four_letter_key] == nil)
-		    	sequence_hash[four_letter_key] = word
+				if(@sequence_hash[four_letter_key] == nil)
+		    	@sequence_hash[four_letter_key] = word
 				else
-					sequence_hash[four_letter_key] = 0
+					@sequence_hash[four_letter_key] = 0
 				end
 				letter_shift_counter+=1
 			end
 		end
-		sequence_hash
+		@sequence_hash
 	end
 
 	def write_sequence_output(sequence_hash)
-
 		puts "\n Sequence\tWord"
 		print_counter = 0
 		sequence_hash.each do |sequence, word|
 			if (word != 0)
 				File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
 				File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
-				puts "   #{sequence}        #{word}"
+				puts "   #{sequence}         #{word}" if (print_counter <=10)
 				print_counter += 1
 			end
 		end
 		if (print_counter >= 10)
-			puts "\nThe first 10 sequence and word combos are displayed as an example"
+			puts "\n1st 10 sequence/word combinations shown above as an example."
 		else
 			puts "\nAll the sequence and word combos are displayed."
 		end
-		puts "The complete sequence_list.txt and word_list.txt have been created!\n"
-
+		puts "\n#{print_counter} uniq sequences have be found out of #{@total_word_count} words scanned."
+		puts "\nTwo files have been created with all word/seq combinations:"
+		puts " 1. sequence_list.txt\n 2. word_list.txt"
 	end
+
 end
 
 loop_init = 0
 loop_total = 100000
-start_time = Time.now
 
-data_source = WordAPI.new
-response = data_source.user_options
-sequence_hash = data_source.word_size_hash(response)
-data_source.write_sequence_output(sequence_hash)
+start_time1 = Time.now
+sequence_instance = WordAPI.new
+stop_time1 = Time.now
 
-stop_time = Time.now
+start_time2 = Time.now
+response = sequence_instance.user_options
+stop_time2 = Time.now
 
-run_time = (stop_time - start_time)
-average_time = run_time/loop_total
+start_time3 = Time.now
+sequence_hash = sequence_instance.word_size_hash(response)
+stop_time3 = Time.now
 
-puts "Total time for #{loop_total} runs: #{run_time} seconds"
-puts "Average time per run: #{average_time*1000} milliseconds"
+start_time4 = Time.now
+sequence_instance.write_sequence_output(sequence_hash)
+stop_time4 = Time.now
+
+
+run_time1 = (stop_time1 - start_time1)
+run_time2 = (stop_time2 - start_time2)
+run_time3 = (stop_time3 - start_time3)
+run_time4 = (stop_time4 - start_time4)
+puts run_time1/loop_total
+puts run_time2/loop_total
+puts run_time3/loop_total
+puts run_time4/loop_total
+# average_time = run_time/loop_total
+
+# puts "\nTotal time for #{loop_total} runs: #{run_time} seconds."
+# puts "Average time per run: #{average_time*1000} milliseconds.\n\n"
