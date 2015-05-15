@@ -19,6 +19,7 @@ class WordAPI
 			file_name = gets.chomp
 			response = user_file_response(file_name)
 		end
+		response
 	end
 
 	def api_response
@@ -64,44 +65,48 @@ class WordAPI
 		response
 	end
 
+	def word_size_hash(user_options)
+		sequence_hash = {}
+		new_word_size_hash = user_options.split("\n").inject(Hash.new(0)) {|word, size| if(size.length >= 4); word[size] = size.length; end; word}
+
+		new_word_size_hash.each do |word, size|
+			adjusted_size = size - 4
+			letter_shift_counter = 0
+
+			for i in 0..adjusted_size
+				four_letter_key = word[letter_shift_counter..(letter_shift_counter+3)]
+				if(sequence_hash[four_letter_key] == nil)
+		    	sequence_hash[four_letter_key] = word
+				else
+					sequence_hash[four_letter_key] = 0
+				end
+				letter_shift_counter+=1
+			end
+		end
+		sequence_hash
+	end
+
+	def write_sequence_output(sequence_hash)
+		puts " Sequence\tWord"
+		sequence_hash.each do |sequence, word|
+			if(word != 0)
+				File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
+				File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
+				puts "   #{sequence}        #{word}"
+			end
+		end
+	end
+
 end
 
+loop_init = 0
+loop_total = 1000000
+start_time = Time.now
 
 data_source = WordAPI.new
 response = data_source.user_options
-
-
-loop_init = 0
-loop_total = 100000
-start_time = Time.now
-sequence_hash = {}
-
-
-word_size_hash = response.split("\n").inject(Hash.new(0)){|word, size| if(size.length >= 4); word[size] = size.length; end; word}
-
-word_size_hash.each do |word, size|
-	adjusted_size = size - 4 # change later
-	letter_shift_counter = 0
-
-	for i in 0..adjusted_size
-		four_letter_key = word[letter_shift_counter..(letter_shift_counter+3)]
-		if(sequence_hash[four_letter_key] == nil)
-    	sequence_hash[four_letter_key] = word
-		else
-			sequence_hash[four_letter_key] = 0
-		end
-		letter_shift_counter+=1
-	end
-
-end
-puts " Sequence\tWord"
-sequence_hash.each do |sequence, word|
-	if(word != 0)
-		File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
-		File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
-		puts "   #{sequence}        #{word}"
-	end
-end
+sequence_hash = data_source.word_size_hash(response)
+data_source.write_sequence_output(sequence_hash)
 
 stop_time = Time.now
 
