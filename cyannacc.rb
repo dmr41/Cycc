@@ -1,11 +1,39 @@
 
 class WordAPI
 	require 'open-uri'
+
 	def initialize
 		@error_counter = 0
+		File.open("sequence_list.txt", 'w') { |file| file.write("Sequence\n") }
+		File.open("word_list.txt", 'w') { |file| file.write("Word\n") }
 	end
+
+	def user_options
+		puts "This program identifies all unique 4 letter sequences from a list of words"
+		puts "Would you like to use the 25K+ word default dictionary?(y/n): "
+		user_data_source_choice = gets.chomp
+		if(user_data_source_choice[0] == "y" || user_data_source_choice[0] == "Y")
+			response = api_response
+		else
+			puts "Please input the path to the file to be parsed: "
+			file_name = gets.chomp
+			response = user_file_response(file_name)
+		end
+	end
+
 	def api_response
-		open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt').read
+		begin
+			fetch_external_words = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt')
+			if fetch_external_words
+				response = fetch_external_words.read
+			else
+				raise
+			end
+		rescue
+			puts "Could not find the defaut site! Please check your connection."
+			abort
+		end
+		response
 	end
 
 	def user_file_response(user_file_path)
@@ -34,24 +62,13 @@ class WordAPI
 			end
 		end
 		response
-			#
-			# raw_file = File.open(user_file_path, "r")
-			# raw_file.read.to_s
 	end
+
 end
 
-puts "This program identifies all unique 4 letter sequences from a list of words"
-puts "Would you like to use the 25K+ word default dictionary?(y/n): "
-user_data_source_choice = gets.chomp
 
 data_source = WordAPI.new
-if(user_data_source_choice[0] == "y" || user_data_source_choice[0] == "Y")
-	response = data_source.api_response
-else
-	puts "Please input the path to the file to be parsed: "
-	file_name = gets.chomp
-	response = data_source.user_file_response(file_name)
-end
+response = data_source.user_options
 
 
 loop_init = 0
@@ -78,8 +95,6 @@ word_size_hash.each do |word, size|
 
 end
 puts " Sequence\tWord"
-File.open("sequence_list.txt", 'w') { |file| file.write("Sequence\n") }
-File.open("word_list.txt", 'w') { |file| file.write("Word\n") }
 sequence_hash.each do |sequence, word|
 	if(word != 0)
 		File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
