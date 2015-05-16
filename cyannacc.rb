@@ -4,15 +4,8 @@ class WordAPI
 	def initialize
 		@error_counter = 0
 		@total_word_count = 0
+		@print_counter = 0
 		@sequence_hash = {}
-	end
-
-	def test_rspec
-		describe "output" do
-			it "test the output" do
-				sequence_instance = WordAPI.new
-	    end
-		end
 	end
 
 	# prompt method to get the name of data source - default website or static file
@@ -75,10 +68,8 @@ class WordAPI
 		response
 	end
 
-	# Create a {word => wordsize } hash from input data that is \n separated
-	# Use a simple for-loop to create a {uniq_sequence => word} hash
-	def wsh(raw_text)
-		raw_text.split("\n").inject(Hash.new(0)) do |word, size|
+	def find_word_size(user_input_text)
+		user_input_text.split("\n").inject(Hash.new(0)) do |word, size|
 			@total_word_count += 1
 			if(size.length >= 4)
 				word[size] = size.length
@@ -87,12 +78,12 @@ class WordAPI
 		end
 	end
 
-	def sequence_shifted_hash(word_size)
-		word_size.each do |word, size|
+	def find_unique_sequence(word_size_hash)
+		word_size_hash.each do |word, size|
 			adjusted_size = size - 4
 			letter_shift_counter = 0
 			for i in 0..adjusted_size
-				four_letter_key = word[letter_shift_counter..(letter_shift_counter+3)]
+				four_letter_key = word[letter_shift_counter..(letter_shift_counter + 3)]
 				if(@sequence_hash[four_letter_key] == nil)
 		    	@sequence_hash[four_letter_key] = word
 				else
@@ -111,43 +102,47 @@ class WordAPI
 		end
 	end
 
-	def word_size_hash(raw_text)
-		word_size = wsh(raw_text)
-		sequence_shifted_hash(word_size)
+	def generate_word_sequence_hash(user_input_text)
+		word_size_hash = find_word_size(user_input_text)
+		find_unique_sequence(word_size_hash)
 		remove_duplicate_sequence_keys
 		@sequence_hash
 	end
 
-	# word_list and sequence_list files write and abbreviated terminal output
-	def write_sequence_output(sequence_hash)
+
+	def output_file_write(sequence_hash)
 		puts "\n Sequence\tWord"
-		print_counter = 0
 		sequence_var = ""
 		word_var = ""
 		sequence_hash.each do |sequence, word|
 			sequence_var = sequence_var + "#{sequence}\n"
 			word_var = word_var + "#{word}\n"
-			puts "   #{sequence}         #{word}" if (print_counter < 10)
-			print_counter += 1
+			puts "   #{sequence}         #{word}" if (@print_counter < 10)
+			@print_counter += 1
 		end
 		File.open("word_list.txt", 'w') { |file| file.write("#{word_var}\n"); file.close }
-	  File.open("sequence_list.txt", 'w') { |file| file.write("#{sequence_var}\n"); file.close }
-		if (print_counter >= 10)
+		File.open("sequence_list.txt", 'w') { |file| file.write("#{sequence_var}\n"); file.close }
+	end
+
+	def user_results_display
+		if (@print_counter >= 10)
 			puts "\n1st 10 sequence/word combinations shown above as an example."
 		else
 			puts "\nAll the sequence and word combos are displayed."
 		end
-		puts "\n#{print_counter} uniq sequences have be found out of #{@total_word_count} words scanned."
+		puts "\n#{@print_counter} uniq sequences have be found out of #{@total_word_count} words scanned."
 		puts "\nTwo files have been created with all seq/word combinations:"
 		puts " 1. sequence_list.txt\n 2. word_list.txt"
+	end
+	# word_list and sequence_list files write and abbreviated terminal output
+	def write_sequence_output(sequence_hash)
+		output_file_write(sequence_hash)
+		user_results_display
 	end
 
 end
 
 sequence_instance = WordAPI.new
-response = sequence_instance.user_options
-# sequence_hash = sequence_instance.wsh(response)
-# puts sequence_hash
-
-sequence_hash = sequence_instance.word_size_hash(response)
+user_response = sequence_instance.user_options
+sequence_hash = sequence_instance.generate_word_sequence_hash(user_response)
 sequence_instance.write_sequence_output(sequence_hash)
