@@ -77,14 +77,17 @@ class WordAPI
 
 	# Create a {word => wordsize } hash from input data that is \n separated
 	# Use a simple for-loop to create a {uniq_sequence => word} hash
-	def word_size_hash(user_options)
-		word_size = user_options.split("\n").inject(Hash.new(0)) do |word, size|
-														@total_word_count += 1
-														if(size.length >= 4)
-															word[size] = size.length
-														end
-														word
-													end
+	def wsh(raw_text)
+		raw_text.split("\n").inject(Hash.new(0)) do |word, size|
+			@total_word_count += 1
+			if(size.length >= 4)
+				word[size] = size.length
+			end
+			word
+		end
+	end
+
+	def sequence_shifted_hash(word_size)
 		word_size.each do |word, size|
 			adjusted_size = size - 4
 			letter_shift_counter = 0
@@ -98,11 +101,20 @@ class WordAPI
 				letter_shift_counter+=1
 			end
 		end
+	end
+
+	def remove_duplicate_sequence_keys
 		@sequence_hash.each do |uniq_key, word|
 			if(word == 0)
 				 @sequence_hash.delete(uniq_key)
 			 end
 		end
+	end
+
+	def word_size_hash(raw_text)
+		word_size = wsh(raw_text)
+		sequence_shifted_hash(word_size)
+		remove_duplicate_sequence_keys
 		@sequence_hash
 	end
 
@@ -119,7 +131,7 @@ class WordAPI
 			print_counter += 1
 		end
 		File.open("word_list.txt", 'w') { |file| file.write("#{word_var}\n"); file.close }
-	  File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence_var}\n"); file.close }
+	  File.open("sequence_list.txt", 'w') { |file| file.write("#{sequence_var}\n"); file.close }
 		if (print_counter >= 10)
 			puts "\n1st 10 sequence/word combinations shown above as an example."
 		else
@@ -132,18 +144,10 @@ class WordAPI
 
 end
 
-loop_init = 0
-loop_total = 1
-
 sequence_instance = WordAPI.new
 response = sequence_instance.user_options
-start_time = Time.now
+# sequence_hash = sequence_instance.wsh(response)
+# puts sequence_hash
+
 sequence_hash = sequence_instance.word_size_hash(response)
 sequence_instance.write_sequence_output(sequence_hash)
-stop_time = Time.now
-
-
-run_time = stop_time - start_time
-average_time = run_time/loop_total
-
-puts "\nTotal time for #{loop_total} run: #{run_time} seconds."
