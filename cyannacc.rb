@@ -3,12 +3,8 @@ class WordAPI
 
 	def initialize
 		@error_counter = 0
-		@total_word_count = 0
-		@print_counter = 0
-		@sequence_hash = {}
 	end
 
-	# prompt method to get the name of data source - default website or static file
 	def user_options
 		puts "This program identifies all unique 4 letter sequences from a list of words"
 		print  "Would you like to use the 25K+ word default dictionary?(y/n): "
@@ -23,7 +19,6 @@ class WordAPI
 		response
 	end
 
-	# data request from default website - can be expanded to accept any site
 	def api_response
 		begin
 			fetch_external_words = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt')
@@ -54,8 +49,8 @@ class WordAPI
 				remaining_attempts = 3 - @error_counter
 				puts "-"*40
 		  	puts "The file #{user_file_path} does not exist."
-				puts "Please enter the correct path."
 				puts "You have #{remaining_attempts} attempts left."
+				print "Please enter the correct path: "
 				new_user_file_path = gets.chomp
 				response = user_file_response(new_user_file_path)
 			else
@@ -67,7 +62,14 @@ class WordAPI
 		end
 		response
 	end
-	
+end
+
+class WordSequenceGenerator
+
+	def initialize
+		@sequence_hash = {}
+	end
+
 	def generate_word_sequence_hash(user_input_text)
 		word_size_hash = find_word_size(user_input_text)
 		find_unique_sequence(word_size_hash)
@@ -77,7 +79,6 @@ class WordAPI
 
 	def find_word_size(user_input_text)
 		user_input_text.split("\n").inject(Hash.new(0)) do |word, size|
-			@total_word_count += 1
 			if(size.length >= 4)
 				word[size] = size.length
 			end
@@ -109,10 +110,19 @@ class WordAPI
 		end
 	end
 
+end
 
-	def write_sequence_output(sequence_hash)
+class FileWriter
+	require 'open-uri'
+
+	def initialize
+		@print_counter = 0
+	end
+
+	def write_sequence_output(sequence_hash, raw_data)
 		output_file_write(sequence_hash)
-		user_results_display
+		original_word_count = raw_data.split.size
+		user_results_display(original_word_count)
 	end
 
 	def output_file_write(sequence_hash)
@@ -129,20 +139,18 @@ class WordAPI
 		File.open("sequence_list.txt", 'w') { |file| file.write("#{sequence_var}\n"); file.close }
 	end
 
-	def user_results_display
+	def user_results_display(original_word_count)
 		if (@print_counter >= 10)
 			puts "\n1st 10 sequence/word combinations shown above as an example."
 		else
 			puts "\nAll the sequence and word combos are displayed."
 		end
-		puts "\n#{@print_counter} uniq sequences have be found out of #{@total_word_count} words scanned."
+		puts "\n#{@print_counter} uniq sequences have be found out of #{original_word_count} words scanned."
 		puts "\nTwo files have been created with all seq/word combinations:"
 		puts " 1. sequence_list.txt\n 2. word_list.txt"
 	end
-
 end
 
-sequence_instance = WordAPI.new
-user_response = sequence_instance.user_options
-sequence_hash = sequence_instance.generate_word_sequence_hash(user_response)
-sequence_instance.write_sequence_output(sequence_hash)
+user_response = WordAPI.new.user_options
+sequence_hash = WordSequenceGenerator.new.generate_word_sequence_hash(user_response)
+FileWriter.new.write_sequence_output(sequence_hash, user_response)
