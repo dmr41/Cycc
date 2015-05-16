@@ -9,6 +9,7 @@ class WordAPI
 		@sequence_hash = {}
 	end
 
+	# prompt method to get the name of data source - default website or static file
 	def user_options
 		puts "This program identifies all unique 4 letter sequences from a list of words"
 		print  "Would you like to use the 25K+ word default dictionary?(y/n): "
@@ -23,6 +24,7 @@ class WordAPI
 		response
 	end
 
+	# data request from default website - can be expanded to accept any site
 	def api_response
 		begin
 			fetch_external_words = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt')
@@ -38,6 +40,7 @@ class WordAPI
 		response
 	end
 
+	# data request from user input file path name
 	def user_file_response(user_file_path)
 		begin
 			raw_file = File.open(user_file_path, "r")
@@ -66,14 +69,17 @@ class WordAPI
 		response
 	end
 
+	# Create a {word => wordsize } hash from input data that is \n separated
+	# Use a simple for-loop to create a {uniq_sequence => word} hash
 	def word_size_hash(user_options)
-		new_word_size_hash = user_options.split("\n").
-		                     inject(Hash.new(0)) {|word, size| @total_word_count += 1;
-													if(size.length >= 4);
-														word[size] = size.length;
-													end;
-													word}
-		new_word_size_hash.each do |word, size|
+		word_size = user_options.split("\n").inject(Hash.new(0)) do |word, size|
+														@total_word_count += 1
+														if(size.length >= 4)
+															word[size] = size.length
+														end
+														word
+													end
+		word_size.each do |word, size|
 			adjusted_size = size - 4
 			letter_shift_counter = 0
 			for i in 0..adjusted_size
@@ -89,6 +95,7 @@ class WordAPI
 		@sequence_hash
 	end
 
+	# word_list and sequence_list files write and abbreviated terminal output
 	def write_sequence_output(sequence_hash)
 		puts "\n Sequence\tWord"
 		print_counter = 0
@@ -106,7 +113,7 @@ class WordAPI
 			puts "\nAll the sequence and word combos are displayed."
 		end
 		puts "\n#{print_counter} uniq sequences have be found out of #{@total_word_count} words scanned."
-		puts "\nTwo files have been created with all word/seq combinations:"
+		puts "\nTwo files have been created with all seq/word combinations:"
 		puts " 1. sequence_list.txt\n 2. word_list.txt"
 	end
 
