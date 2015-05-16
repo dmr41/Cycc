@@ -34,13 +34,12 @@ class WordAPI
 		response
 	end
 
-	# data request from user input file path name
 	def user_file_response(user_file_path)
 		begin
 			raw_file = File.open(user_file_path, "r")
 			if raw_file
 				response = raw_file.read.to_s
-	  	else
+			else
 				raise
 			end
 		rescue
@@ -48,7 +47,7 @@ class WordAPI
 			if(@error_counter < 3)
 				remaining_attempts = 3 - @error_counter
 				puts "-"*40
-		  	puts "The file #{user_file_path} does not exist."
+				puts "The file #{user_file_path} does not exist."
 				puts "You have #{remaining_attempts} attempts left."
 				print "Please enter the correct path: "
 				new_user_file_path = gets.chomp
@@ -93,7 +92,7 @@ class WordSequenceGenerator
 			for i in 0..adjusted_size
 				four_letter_key = word[letter_shift_counter..(letter_shift_counter + 3)]
 				if(@sequence_hash[four_letter_key] == nil)
-		    	@sequence_hash[four_letter_key] = word
+					@sequence_hash[four_letter_key] = word
 				else
 					@sequence_hash[four_letter_key] = 0
 				end
@@ -105,7 +104,7 @@ class WordSequenceGenerator
 	def remove_duplicate_sequence_keys
 		@sequence_hash.each do |uniq_key, word|
 			if(word == 0)
-				 @sequence_hash.delete(uniq_key)
+				@sequence_hash.delete(uniq_key)
 			 end
 		end
 	end
