@@ -67,7 +67,7 @@ class WordAPI
 				response = user_file_response(new_user_file_path)
 			else
 				puts "-"*40
-				puts "Your last attempted was incorrect."
+				puts "Your last attempt was incorrect."
 				puts "Redirecting you to our test word list after 3 attempts."
 				response = api_response
 			end
@@ -98,26 +98,28 @@ class WordAPI
 				letter_shift_counter+=1
 			end
 		end
+		@sequence_hash.each do |uniq_key, word|
+			if(word == 0)
+				 @sequence_hash.delete(uniq_key)
+			 end
+		end
 		@sequence_hash
 	end
 
 	# word_list and sequence_list files write and abbreviated terminal output
 	def write_sequence_output(sequence_hash)
-
-		sequence_file = File.new("sequence_list.txt", "w")
-		word_file = File.new("word_list.txt", "w")
 		puts "\n Sequence\tWord"
 		print_counter = 0
+		sequence_var = ""
+		word_var = ""
 		sequence_hash.each do |sequence, word|
-			if (word != 0)
-				File.open(sequence_file, 'a') { |file| file.write("#{sequence}\n") }
-				File.open(word_file, 'a') { |file| file.write("#{word}\n") }
-				puts "   #{sequence}         #{word}" if (print_counter < 10)
-				print_counter += 1
-			end
+			sequence_var = sequence_var + "#{sequence}\n"
+			word_var = word_var + "#{word}\n"
+			puts "   #{sequence}         #{word}" if (print_counter < 10)
+			print_counter += 1
 		end
-		sequence_file.close
-		word_file.close
+		File.open("word_list.txt", 'w') { |file| file.write("#{word_var}\n"); file.close }
+	  File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence_var}\n"); file.close }
 		if (print_counter >= 10)
 			puts "\n1st 10 sequence/word combinations shown above as an example."
 		else
@@ -135,8 +137,8 @@ loop_total = 1
 
 sequence_instance = WordAPI.new
 response = sequence_instance.user_options
-sequence_hash = sequence_instance.word_size_hash(response)
 start_time = Time.now
+sequence_hash = sequence_instance.word_size_hash(response)
 sequence_instance.write_sequence_output(sequence_hash)
 stop_time = Time.now
 
