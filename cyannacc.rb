@@ -67,6 +67,13 @@ class WordAPI
 		end
 		response
 	end
+	
+	def generate_word_sequence_hash(user_input_text)
+		word_size_hash = find_word_size(user_input_text)
+		find_unique_sequence(word_size_hash)
+		remove_duplicate_sequence_keys
+		@sequence_hash
+	end
 
 	def find_word_size(user_input_text)
 		user_input_text.split("\n").inject(Hash.new(0)) do |word, size|
@@ -102,13 +109,11 @@ class WordAPI
 		end
 	end
 
-	def generate_word_sequence_hash(user_input_text)
-		word_size_hash = find_word_size(user_input_text)
-		find_unique_sequence(word_size_hash)
-		remove_duplicate_sequence_keys
-		@sequence_hash
-	end
 
+	def write_sequence_output(sequence_hash)
+		output_file_write(sequence_hash)
+		user_results_display
+	end
 
 	def output_file_write(sequence_hash)
 		puts "\n Sequence\tWord"
@@ -133,11 +138,6 @@ class WordAPI
 		puts "\n#{@print_counter} uniq sequences have be found out of #{@total_word_count} words scanned."
 		puts "\nTwo files have been created with all seq/word combinations:"
 		puts " 1. sequence_list.txt\n 2. word_list.txt"
-	end
-	# word_list and sequence_list files write and abbreviated terminal output
-	def write_sequence_output(sequence_hash)
-		output_file_write(sequence_hash)
-		user_results_display
 	end
 
 end
