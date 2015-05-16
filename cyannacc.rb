@@ -4,9 +4,15 @@ class WordAPI
 	def initialize
 		@error_counter = 0
 		@total_word_count = 0
-		File.open("sequence_list.txt", 'w') { |file| file.write("") }
-		File.open("word_list.txt", 'w') { |file| file.write("") }
 		@sequence_hash = {}
+	end
+
+	def test_rspec
+		describe "output" do
+			it "test the output" do
+				sequence_instance = WordAPI.new
+	    end
+		end
 	end
 
 	# prompt method to get the name of data source - default website or static file
@@ -97,16 +103,21 @@ class WordAPI
 
 	# word_list and sequence_list files write and abbreviated terminal output
 	def write_sequence_output(sequence_hash)
+
+		sequence_file = File.new("sequence_list.txt", "w")
+		word_file = File.new("word_list.txt", "w")
 		puts "\n Sequence\tWord"
 		print_counter = 0
 		sequence_hash.each do |sequence, word|
 			if (word != 0)
-				File.open("sequence_list.txt", 'a') { |file| file.write("#{sequence}\n") }
-				File.open("word_list.txt", 'a') { |file| file.write("#{word}\n") }
-				puts "   #{sequence}         #{word}" if (print_counter <=10)
+				File.open(sequence_file, 'a') { |file| file.write("#{sequence}\n") }
+				File.open(word_file, 'a') { |file| file.write("#{word}\n") }
+				puts "   #{sequence}         #{word}" if (print_counter < 10)
 				print_counter += 1
 			end
 		end
+		sequence_file.close
+		word_file.close
 		if (print_counter >= 10)
 			puts "\n1st 10 sequence/word combinations shown above as an example."
 		else
@@ -120,34 +131,17 @@ class WordAPI
 end
 
 loop_init = 0
-loop_total = 100000
+loop_total = 1
 
-start_time1 = Time.now
 sequence_instance = WordAPI.new
-stop_time1 = Time.now
-
-start_time2 = Time.now
 response = sequence_instance.user_options
-stop_time2 = Time.now
-
-start_time3 = Time.now
 sequence_hash = sequence_instance.word_size_hash(response)
-stop_time3 = Time.now
-
-start_time4 = Time.now
+start_time = Time.now
 sequence_instance.write_sequence_output(sequence_hash)
-stop_time4 = Time.now
+stop_time = Time.now
 
 
-run_time1 = (stop_time1 - start_time1)
-run_time2 = (stop_time2 - start_time2)
-run_time3 = (stop_time3 - start_time3)
-run_time4 = (stop_time4 - start_time4)
-puts run_time1/loop_total
-puts run_time2/loop_total
-puts run_time3/loop_total
-puts run_time4/loop_total
-# average_time = run_time/loop_total
+run_time = stop_time - start_time
+average_time = run_time/loop_total
 
-# puts "\nTotal time for #{loop_total} runs: #{run_time} seconds."
-# puts "Average time per run: #{average_time*1000} milliseconds.\n\n"
+puts "\nTotal time for #{loop_total} run: #{run_time} seconds."
