@@ -1,0 +1,21 @@
+To Run
+$ ruby cyannacc.rb
+
+This program is a single file with 3 Classes
+
+1. WordAPI -
+    a. Provides user data command line interface
+    b. Externally fetches the data from the amazon site provide (dictionary.txt data)
+    c. Locally fetches data from a path provided by the user.
+    d. Return data for processing
+
+2. WordSequenceGenerator -
+     a. Creates a word => word_size hash from WordAPI response 1d
+     b. Creates a unique_4_letter_sequence => word hash from 2a.
+
+3. FileWriter -
+     a. Writes two files from the hash generated from 2b.
+            - sequence_list.txt
+            - word_list.txt
+     b. Prints up to 10 sequence/word pairs to the terminal for user to spot check.
+     c. Outputs number of unique sequences found out of number of words scanned.
