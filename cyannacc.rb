@@ -8,22 +8,22 @@ class WordAPI
 	def user_options
 		puts "This program identifies all unique 4 letter sequences from a list of words"
 		print  "Would you like to use the 25K+ word default dictionary?(y/n): "
-		user_data_source_choice = gets.chomp
-		if(user_data_source_choice[0] == "y" || user_data_source_choice[0] == "Y")
-			response = api_response
+		user_data_source_choice = gets.chomp.downcase
+		if(user_data_source_choice == "y" || user_data_source_choice == "yes")
+			data_response = api_response
 		else
 			print "Please input the path to the file to be parsed: "
 			file_name = gets.chomp
-			response = user_file_response(file_name)
+			data_response = user_file_response(file_name)
 		end
-		response
+		data_response
 	end
 
 	def api_response
 		begin
 			fetch_external_words = open('https://s3.amazonaws.com/cyanna-it/misc/dictionary.txt')
 			if fetch_external_words
-				response = fetch_external_words.read
+				data_response = fetch_external_words.read
 			else
 				raise
 			end
@@ -31,14 +31,28 @@ class WordAPI
 			puts "Could not find the defaut site! Please check your connection."
 			abort
 		end
-		response
+		data_response
+	end
+
+	def find_file_path(user_file_path)
+		starting_path = File.expand_path("~")
+		if(user_file_path.include? starting_path)
+			final_input_path = user_file_path
+		elsif(user_file_path.include? "/")
+			user_file_path.gsub!("~", "")
+			final_input_path = File.expand_path("#{starting_path}#{user_file_path}")
+		else
+			final_input_path = user_file_path
+		end
+		final_input_path
 	end
 
 	def user_file_response(user_file_path)
+		final_input_path = find_file_path(user_file_path)
 		begin
-			raw_file = File.open(user_file_path, "r")
+			raw_file = File.open(final_input_path, "r")
 			if raw_file
-				response = raw_file.read.to_s
+				data_response = raw_file.read.to_s
 			else
 				raise
 			end
@@ -47,19 +61,19 @@ class WordAPI
 			if(@error_counter < 3)
 				remaining_attempts = 3 - @error_counter
 				puts "-"*40
-				puts "The file #{user_file_path} does not exist."
+				puts "The file #{final_input_path} does not exist."
 				puts "You have #{remaining_attempts} attempts left."
 				print "Please enter the correct path: "
 				new_user_file_path = gets.chomp
-				response = user_file_response(new_user_file_path)
+				data_response = user_file_response(new_user_file_path)
 			else
 				puts "-"*40
 				puts "Your last attempt was incorrect."
 				puts "Redirecting you to our test word list after 3 attempts."
-				response = api_response
+				data_response = api_response
 			end
 		end
-		response
+		data_response
 	end
 end
 
